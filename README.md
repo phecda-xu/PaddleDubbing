@@ -58,3 +58,4 @@ sh setup.sh
 #### 参考资料
 
 [用Python实现带GUI 的exe](https://blog.csdn.net/miffy2017may/article/details/103391855)
+[PaddleSpeech](https://github.com/PaddlePaddle/PaddleSpeech)
