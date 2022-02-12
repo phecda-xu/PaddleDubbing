@@ -81,6 +81,8 @@ class VoiceMaker(object):
     def process_text(self, text, output_path, spk_id):
         if self.tts_executor is None:
             showerror("错误", "请先选择模型并启动！")
+        if not os.path.exists(output_path):
+            os.mkdir(output_path)
         output = os.path.join(output_path, '{}_spk_{}_{}.wav'.format(self.n, spk_id, text))
         wav_file = self.tts_executor(
             text=text,
@@ -94,6 +96,8 @@ class VoiceMaker(object):
     def process_txt_file(self, txt_file, output_path, spk_id):
         if self.tts_executor is None:
             showerror("错误", "请先选择模型并启动！")
+        if not os.path.exists(output_path):
+            os.mkdir(output_path)
         text_list = self.read_txt(txt_file)
         p_bar = ttk.Progressbar(work_frame)
         p_bar.grid(padx=3, pady=20, row=10, column=0)
