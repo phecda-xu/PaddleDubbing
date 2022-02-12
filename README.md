@@ -6,6 +6,15 @@
 - 界面
 ![](pic/gui.png)
 
+
+## v1.0
+
+```
+sh generate_audio.sh trans.txt test/
+```
+
+## v2.0
+
 #### 优化
 
 - 针对paddlespeech中给出的demo每次调用都需要重新加载一次模型的问题进行优化；
