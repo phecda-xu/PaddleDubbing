@@ -67,6 +67,12 @@ sh generate_audio.sh trans.txt test/
 保存的音频文件名就包括文本内容，且开头会加上行序
 ```
 
+#### 待做
+
+- 优化显示，log等；
+- 增加voice_clone;
+
+
 #### 参考资料
 
 - [用Python实现带GUI 的exe](https://blog.csdn.net/miffy2017may/article/details/103391855)
