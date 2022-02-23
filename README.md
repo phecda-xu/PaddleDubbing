@@ -1,4 +1,4 @@
-# TTS-GUI
+# PaddleDubbing
 
 #### 介绍
 模型能力来自基于百度飞桨平台开源的paddlespeech语音项目，增加GUI操作界面，方便使用。
