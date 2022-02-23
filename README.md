@@ -6,6 +6,16 @@
 - 界面
 ![](pic/gui.png)
 
+- 环境搭建
+
+```commandline
+virtualenv -p python venv
+source venv/bin/activate
+
+sh setup.sh
+```
+
+
 
 ## v1.0
 
@@ -22,14 +32,7 @@ sh generate_audio.sh trans.txt test/
 
 #### 使用
 
-- 环境搭建
 
-```commandline
-virtualenv -p python venv
-source venv/bin/activate
-
-sh setup.sh
-```
 
 - 操作
 
