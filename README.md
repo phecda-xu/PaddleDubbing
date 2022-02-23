@@ -17,7 +17,7 @@ sudo apt install build-essential
 # python-dev 出现python.h找不到的错误时安装这个，版本与系统python的版本对应
 # sudo apt-get install python3.8-dev
 
-# 版本与系统python的版本对应
+# 版本与系统python的版本对应，用于GUI显示
 sudo apt-get install python3.8-tk
 
 # python 环境
