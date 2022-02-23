@@ -7,7 +7,22 @@
 - 界面
 ![](pic/gui.png)
 
-- 环境搭建
+- 基础环境搭建
+
+```
+# c++编译环境
+apt-get update
+sudo apt install build-essential
+
+# python-dev 出现python.h找不到的错误时安装这个，版本与系统python的版本对应
+# sudo apt-get install python3.8-dev
+
+
+# python 环境
+python -m pip install --upgrade pip
+```
+
+- 虚拟环境
 
 ```commandline
 virtualenv -p python venv
