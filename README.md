@@ -87,6 +87,7 @@ sh generate_audio.sh trans.txt test/
 #### 待做
 
 - 优化显示，log等；
+- 增加GPU调用；
 - 增加voice_clone;
 
 
