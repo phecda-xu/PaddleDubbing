@@ -7,6 +7,15 @@
 - 界面
 ![](pic/gui.png)
 
+- 视频vlog
+
+[【前期准备工作】](https://www.bilibili.com/video/BV1134y117Jr/)
+
+[【v1.0版本】](https://www.bilibili.com/video/BV1dq4y147Gn/)
+
+[【v2.0版本】](https://www.bilibili.com/video/BV1zq4y1x71Y/)
+
+
 - 基础环境搭建
 
 ```
