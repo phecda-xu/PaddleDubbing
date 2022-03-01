@@ -325,7 +325,8 @@ class TTSExecutor(object):
             # must have phones_dict in acoustic
             self.phones_dict = os.path.join(
                 am_res_path, pretrained_models[am_tag]['phones_dict'])
-            print("self.phones_dict:", self.phones_dict)
+            # print("self.phones_dict:", self.phones_dict)
+            self.logger.info("self.phones_dict:{}".format(self.phones_dict))
             self.logger.info(am_res_path)
             self.logger.info(self.am_config)
             self.logger.info(self.am_ckpt)
@@ -335,7 +336,8 @@ class TTSExecutor(object):
             self.am_stat = os.path.abspath(am_stat)
             self.phones_dict = os.path.abspath(phones_dict)
             self.am_res_path = os.path.dirname(os.path.abspath(self.am_config))
-        print("self.phones_dict:", self.phones_dict)
+        # print("self.phones_dict:", self.phones_dict)
+        self.logger.info("self.phones_dict:{}".format(self.phones_dict))
 
         # for speedyspeech
         self.tones_dict = None
@@ -383,21 +385,24 @@ class TTSExecutor(object):
         with open(self.phones_dict, "r") as f:
             phn_id = [line.strip().split() for line in f.readlines()]
         vocab_size = len(phn_id)
-        print("vocab_size:", vocab_size)
+        # print("vocab_size:", vocab_size)
+        self.logger.info("vocab_size:{}".format(vocab_size))
 
         tone_size = None
         if self.tones_dict:
             with open(self.tones_dict, "r") as f:
                 tone_id = [line.strip().split() for line in f.readlines()]
             tone_size = len(tone_id)
-            print("tone_size:", tone_size)
+            # print("tone_size:", tone_size)
+            self.logger.info("tone_size:{}".format(tone_size))
 
         spk_num = None
         if self.speaker_dict:
             with open(self.speaker_dict, 'rt') as f:
                 spk_id = [line.strip().split() for line in f.readlines()]
             spk_num = len(spk_id)
-            print("spk_num:", spk_num)
+            # print("spk_num:", spk_num)
+            self.logger.info("spk_num:{}".format(spk_num))
 
         # frontend
         if lang == 'zh':
@@ -407,7 +412,8 @@ class TTSExecutor(object):
 
         elif lang == 'en':
             self.frontend = English(phone_vocab_path=self.phones_dict)
-        print("frontend done!")
+        # print("frontend done!")
+        self.logger.info("frontend done!")
 
         # acoustic model
         odim = self.am_config.n_mels
@@ -437,7 +443,8 @@ class TTSExecutor(object):
         am_normalizer = ZScore(am_mu, am_std)
         self.am_inference = am_inference_class(am_normalizer, am)
         self.am_inference.eval()
-        print("acoustic model done!")
+        # print("acoustic model done!")
+        self.logger.info("acoustic model done!")
 
         # vocoder
         # model: {model_name}_{dataset}
@@ -455,7 +462,8 @@ class TTSExecutor(object):
         voc_normalizer = ZScore(voc_mu, voc_std)
         self.voc_inference = voc_inference_class(voc_normalizer, voc)
         self.voc_inference.eval()
-        print("voc done!")
+        # print("voc done!")
+        self.logger.info("voc done!")
 
     def preprocess(self, input: Any, *args, **kwargs):
         """
@@ -495,6 +503,7 @@ class TTSExecutor(object):
                 text, merge_sentences=merge_sentences)
             phone_ids = input_ids["phone_ids"]
         else:
+            self.logger.error("lang should in {'zh', 'en'}!")
             raise ValueError("lang should in {'zh', 'en'}!")
 
         flags = 0
