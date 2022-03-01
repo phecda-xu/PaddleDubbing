@@ -58,7 +58,11 @@ sh generate_audio.sh trans.txt test/
 
 #### 使用
 
+- 启动
 
+```
+python start.py
+```
 
 - 操作
 
