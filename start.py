@@ -1,5 +1,6 @@
 import os
 os.environ['PPSPEECH_HOME'] = os.getcwd()
+os.environ["CUDA_VISIBLE_DEVICES"] = ''
 import paddle
 
 from tkinter import *
