@@ -29,8 +29,8 @@ sudo apt install build-essential
 # 版本与系统python的版本对应，用于GUI显示
 sudo apt-get install python3.8-tk
 
-# python 环境
-python -m pip install --upgrade pip
+# python 环境 version>=3.6 
+# python -m pip install --upgrade pip
 ```
 
 - 虚拟环境
@@ -39,7 +39,7 @@ python -m pip install --upgrade pip
 virtualenv -p python venv
 source venv/bin/activate
 
-sh setup.sh
+sh setup.sh gpu
 ```
 
 
