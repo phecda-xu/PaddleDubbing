@@ -100,7 +100,7 @@ python start.py
 #### 待做
 
 - 优化显示，log等；
-- 增加GPU调用；
+- ~~增加GPU调用~~；
 - 增加语速、语气调节功能；
 - 增加voice_clone;
 
