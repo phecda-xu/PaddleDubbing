@@ -1,6 +1,5 @@
 import os
 os.environ['PPSPEECH_HOME'] = os.getcwd()
-os.environ["CUDA_VISIBLE_DEVICES"] = ''
 import paddle
 
 from tkinter import *
@@ -32,9 +31,10 @@ class CacheLogger(Logger):
     def __init__(self):
         super(CacheLogger, self).__init__()
 
-    def __call__(self, log_level: str, msg: str):
+    def __call__(self, log_level: int, msg: str):
+        loglevel_dict = {20: "info", 30: "warning", 40: "error"}
         self.logger.log(log_level, msg)
-        model_Lbox.insert("end", "log_level {}: {}".format(log_level, msg))
+        model_Lbox.insert("end", "log_level {}: {}".format(loglevel_dict[log_level], msg))
 
 
 class VoiceMaker(object):
@@ -59,7 +59,7 @@ class VoiceMaker(object):
                     lang='zh',
                     device=paddle.get_device()
                     ):
-
+        self.vm_logger(20, "loading model ......")
         self.tts_executor = TTSExecutor(self.vm_logger,
                                         am=am,
                                         am_config=am_config,
@@ -78,10 +78,11 @@ class VoiceMaker(object):
         self.button_model.configure(state="disabled")
         self.button_model.configure(text="模型加载完成")
 
-
     def process_text(self, text, output_path, spk_id):
         if self.tts_executor is None:
             showerror("错误", "请先选择模型并启动！")
+        if text == '':
+            showerror("错误", "请先输入文字！")
         if not os.path.exists(output_path):
             os.mkdir(output_path)
         output = os.path.join(output_path, '{}_spk_{}_{}.wav'.format(self.n, spk_id, text))
@@ -94,30 +95,39 @@ class VoiceMaker(object):
         self.n += 1
         # print('Wave file has been generated: {}'.format(wav_file))
 
-    def process_txt_file(self, txt_file, output_path, spk_id):
-        if self.tts_executor is None:
+    def process_txt_file(self, master, txt_file, output_path, spk_id):
+
+        if self.tts_executor is None :
             showerror("错误", "请先选择模型并启动！")
-        if not os.path.exists(output_path):
-            os.mkdir(output_path)
-        text_list = self.read_txt(txt_file)
-        p_bar = ttk.Progressbar(work_frame)
-        p_bar.grid(padx=3, pady=20, row=10, column=0)
-        p_bar['value'] = 0
-        p_bar['maximum'] = len(text_list)
-        for i in range(len(text_list)):
-            line = text_list[i]
-            output = os.path.join(output_path, "{}_spk_{}_{}.wav".format(self.n, spk_id, line))
-            wav_file = self.tts_executor(
-                text=line,
-                output=output,
-                spk_id=spk_id
-            )
-            p_bar['value'] = i + 1
-            self.n += 1
-            root.update()
-            process_Lbox.insert("end", '保存: {}'.format(wav_file))
-            # print('Wave file has been generated: {}'.format(wav_file))
-        showinfo("提示", "文件处理完成！")
+        elif txt_file == '':
+            showerror("错误", "请输入文件路劲！")
+        else:
+            self.button_input.configure(text="停止")
+            if not os.path.exists(output_path):
+                os.mkdir(output_path)
+            text_list = self.read_txt(txt_file)
+            p_bar = ttk.Progressbar(master, mode="determinate", length=100)
+            p_bar.grid(padx=10, pady=20, row=10, column=0, sticky=NSEW)
+            p_bar['value'] = 0
+            p_bar['maximum'] = len(text_list)
+            for i in range(len(text_list)):
+                if self.break_in:
+                    break
+                line = text_list[i]
+                output = os.path.join(output_path, "{}_spk_{}_{}.wav".format(self.n, spk_id, line))
+                wav_file = self.tts_executor(
+                    text=line,
+                    output=output,
+                    spk_id=spk_id
+                )
+                p_bar['value'] = i + 1
+                self.n += 1
+                root.update()
+                process_Lbox.insert("end", '保存: {}'.format(wav_file))
+                # print('Wave file has been generated: {}'.format(wav_file))
+            showinfo("提示", "文件处理完成！")
+            self.button_input.configure(text="开始")
+
 
     def input_item_adding(self, text, chosen_tuple=None, padx=10, pady=10, fg="red", width=20, font=("黑体", '11')):
         lf = LabelFrame(work_frame, text=text, padx=padx,
@@ -155,22 +165,17 @@ class VoiceMaker(object):
         else:
             showerror("错误", "只支持中文-'ch'和英文-'en'")
 
-    def add_button(self, master, text, width, command, row, column, pady=10):
+    def add_button(self, master, text, width, command, row, column, pady=10, padx=10, sticky=NS):
         submit = Button(master, text=text, width=width, command=command)
-        submit.grid(row=row, column=column, pady=pady)
+        submit.grid(row=row, column=column,padx=padx, pady=pady, sticky=sticky)
         return submit
 
     def add_directory(self,
-                      text_frame,
+                      lf,
                       text_button,
-                      padx=10,
-                      pady=10,
-                      fg="red",
                       width=20,
-                      font=("黑体", '11'), to_dir=False):
-        lf = LabelFrame(work_frame, text=text_frame, padx=padx,
-                        pady=pady, fg=fg, font=font, width=width)
-        lf.grid(padx=10, pady=3, sticky=NSEW)
+                      to_dir=False):
+
         path = StringVar(lf)
         def select_path():
             if to_dir:
@@ -197,30 +202,76 @@ class VoiceMaker(object):
                 text_list.append(line.strip('\n'))
         return text_list
 
-    def user_setting(self):
-        spk_id_entry, _ = self.input_item_adding(text="说话人ID(0-20)")
-        spk_id_entry.insert(0, '1')
-        output_path_entry = self.add_directory(text_frame="输出路径", text_button="路径选择...", width=40, to_dir=True)
+    def button_input_event(self, event):
+        if self.button_input['text'] == "开始":
+            self.break_in = 0
+        elif self.button_input['text'] == "停止":
+            self.break_in = 1
+
+
+    def outpu_path_set(self, text_frame, text_button, padx=10, pady=10, fg="red", width=20, font=("黑体", '11')):
+        lf = LabelFrame(work_frame, text=text_frame, padx=padx,
+                        pady=pady, fg=fg, font=font, width=width)
+        lf.grid(padx=10, pady=3, sticky=NSEW)
+        output_path_entry = self.add_directory(lf, text_button=text_button, width=40, to_dir=True)
         output_path_entry.insert(0, '/media/sf_vbox_share')
+        return output_path_entry
+
+    def text_file_path_load(self, text_frame, text_button, padx=10, pady=10, fg="red", width=20, font=("黑体", '11')):
+        lf = LabelFrame(work_frame, text=text_frame, padx=padx,
+                        pady=pady, fg=fg, font=font, width=width)
+        lf.grid(padx=10, pady=3, sticky=NSEW)
+        dir_entry = self.add_directory(lf, text_button=text_button, width=40)
+
+        self.break_in = 0
+        self.button_input = self.add_button(lf,
+                                            text="开始", width=8,
+                                            row=10,
+                                            column=1,
+                                            padx=2,
+                                            command=lambda: self.process_txt_file(lf,
+                                                                                  txt_file=dir_entry.get(),
+                                                                                  output_path=self.output_path_entry.get(),
+                                                                                  spk_id=int(self.spk_id_entry.get())),
+                                            sticky=E)
+        self.button_input.bind("<ButtonPress-1>", self.button_input_event)
+
+    def user_setting(self):
+        # spk
+        self.spk_id_entry, _ = self.input_item_adding(text="说话人ID(0-20)")
+        self.spk_id_entry.insert(0, '1')
+
+        # output
+        self.output_path_entry = self.outpu_path_set(text_frame="输出路径", text_button="路径选择...", width=40)
+
+        # text input
         text_entry, text_lf = self.input_item_adding(text="输入文本", width=40)
         self.button_input = self.add_button(text_lf,
-                                            text="开始", width=8,
+                                            text="合成", width=8,
                                             row=0,
                                             column=1,
                                             command=lambda: self.process_text(text=text_entry.get(),
-                                                                              output_path=output_path_entry.get(),
-                                                                              spk_id=int(spk_id_entry.get())))
+                                                                              output_path=self.output_path_entry.get(),
+                                                                              spk_id=int(self.spk_id_entry.get())))
 
-        dir_entry = self.add_directory(text_frame="输入txt文件路劲", text_button="路径选择...", width=40)
-        self.button_input = self.add_button(work_frame,
-                                            text="开始", width=8,
-                                            row=11,
-                                            column=0,
-                                            command=lambda: self.process_txt_file(txt_file=dir_entry.get(),
-                                                                                  output_path=output_path_entry.get(),
-                                                                                  spk_id=int(spk_id_entry.get())))
+        self.text_file_path_load(text_frame="输入txt文件路劲", text_button="路径选择...", width=40)
+
+    def set_device(self):
+        if self.gpu_CheckVar.get():
+            os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+            self.vm_logger(20, "Set gpu, use device 0.")
+        else:
+            os.environ["CUDA_VISIBLE_DEVICES"] = ''
+            self.vm_logger(20, "Set cpu.")
 
     def model_setting(self):
+        self.gpu_CheckVar = IntVar()
+        gpu_check = Checkbutton(work_frame, text="GPU", variable=self.gpu_CheckVar, onvalue=1, offvalue=0, height=2, width=4,
+                                command=self.set_device)
+        gpu_check.bind("<ButtonPress-1>", self.model_bind_event)
+        gpu_check.grid(padx=10, pady=3, sticky=W, row=0, column=0)
+        # gpu_check
+
         am_chosen = ()
         voc_chosen = ()
         lang_chosen = ('zh', 'en')
@@ -235,18 +286,20 @@ class VoiceMaker(object):
         self.button_model = self.add_button(work_frame,
                                             text="启动模型",
                                             width=8,
-                                            row=3,
+                                            row=4,
                                             column=0,
                                             command=lambda: self._init_model(am=self.am_entry.get(),
                                                                              voc=self.voc_entry.get(),
                                                                              lang=self.lang_entry.get()))
 
+
 if __name__ == '__main__':
-    root = Tk()
-    center_window(root, 1030, 800)
-    root.resizable(width=False, height=False)
-    root.title('AI配音系统')
-    style = Style(theme='cosmo')
+    # root = Tk()
+    style = Style(theme='lumen')
+    root = style.master
+    center_window(root, 1040, 820)
+    root.resizable(width=True, height=True)
+    root.title('AI配音工具')
 
     work_frame = LabelFrame(root, text="工作区", padx=10,
                             pady=10, fg="red", bg='white', font=("黑体", '11'), width=50)
