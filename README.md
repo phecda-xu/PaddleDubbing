@@ -1,8 +1,9 @@
 # PaddleDubbing
 
 #### 介绍
-模型能力来自基于百度飞桨平台开源的paddlespeech语音项目，增加GUI操作界面，方便使用。
-可以选择模型，说话人类型；可以单句合成也可以批量合成。支持中文和英文，不支持中英混合。
+
+基于streamlit搭建的可视化界面，模型能力来自[paddlespeech](https://github.com/PaddlePaddle/PaddleSpeech)。
+可以灵活配置、调用模型；可以单句合成也可以批量合成。支持中文和英文，不支持中英混合。
 
 - 界面
 ![](pic/gui.png)
@@ -16,6 +17,7 @@
 [【v2.0版本】](https://www.bilibili.com/video/BV1zq4y1x71Y/)
 
 
+
 - 基础环境搭建
 
 ```
@@ -25,9 +27,6 @@ sudo apt install build-essential
 
 # python-dev 出现python.h找不到的错误时安装这个，版本与系统python的版本对应
 # sudo apt-get install python3.8-dev
-
-# 版本与系统python的版本对应，用于GUI显示
-sudo apt-get install python3.8-tk
 
 # python 环境 version>=3.6 
 # python -m pip install --upgrade pip
@@ -56,6 +55,8 @@ sh setup.sh gpu
 见 master分支
 ```
 
+## v3.0
+
 #### 优化
 
 - 改用streamlit就行界面搭建，优化显示和调用逻辑；
@@ -69,7 +70,12 @@ sh setup.sh gpu
 streamlit run start.py
 ```
 
+#### 待做
 
+- 增加打包下载功能;
+- v3.0 视频vlog;
+- 增加语速、声调等设置;
+- 增加远程功能;
 
 
 #### 参考资料
