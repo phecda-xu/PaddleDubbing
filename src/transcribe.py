@@ -282,12 +282,12 @@ class TTSExecutor(object):
 
         res_path = os.path.join(MODEL_HOME, tag)
         if not os.path.isdir(res_path):
-            self.logger.info(
+            print(
                 'Download pretrained model and stored in: {}'.format(res_path))
         decompressed_path = download_and_decompress(pretrained_models[tag],
                                                     res_path)
         decompressed_path = os.path.abspath(decompressed_path)
-        self.logger.info(
+        print(
             'Use pretrained model stored in: {}'.format(decompressed_path))
         return decompressed_path
 
@@ -309,7 +309,7 @@ class TTSExecutor(object):
         Init model and other resources from a specific path.
         """
         if hasattr(self, 'am_inference') and hasattr(self, 'voc_inference'):
-            self.logger.info('Models had been initialized.')
+            print('Models had been initialized.')
             return
         # am
         am_tag = am + '-' + lang
@@ -326,10 +326,10 @@ class TTSExecutor(object):
             self.phones_dict = os.path.join(
                 am_res_path, pretrained_models[am_tag]['phones_dict'])
             # print("self.phones_dict:", self.phones_dict)
-            self.logger.info("self.phones_dict:{}".format(self.phones_dict))
-            self.logger.info(am_res_path)
-            self.logger.info(self.am_config)
-            self.logger.info(self.am_ckpt)
+            print("self.phones_dict:{}".format(self.phones_dict))
+            print(am_res_path)
+            print(self.am_config)
+            print(self.am_ckpt)
         else:
             self.am_config = os.path.abspath(am_config)
             self.am_ckpt = os.path.abspath(am_ckpt)
@@ -337,7 +337,7 @@ class TTSExecutor(object):
             self.phones_dict = os.path.abspath(phones_dict)
             self.am_res_path = os.path.dirname(os.path.abspath(self.am_config))
         # print("self.phones_dict:", self.phones_dict)
-        self.logger.info("self.phones_dict:{}".format(self.phones_dict))
+        print("self.phones_dict:{}".format(self.phones_dict))
 
         # for speedyspeech
         self.tones_dict = None
@@ -366,9 +366,9 @@ class TTSExecutor(object):
                                          pretrained_models[voc_tag]['ckpt'])
             self.voc_stat = os.path.join(
                 voc_res_path, pretrained_models[voc_tag]['speech_stats'])
-            self.logger.info(voc_res_path)
-            self.logger.info(self.voc_config)
-            self.logger.info(self.voc_ckpt)
+            print(voc_res_path)
+            print(self.voc_config)
+            print(self.voc_ckpt)
         else:
             self.voc_config = os.path.abspath(voc_config)
             self.voc_ckpt = os.path.abspath(voc_ckpt)
@@ -386,7 +386,7 @@ class TTSExecutor(object):
             phn_id = [line.strip().split() for line in f.readlines()]
         vocab_size = len(phn_id)
         # print("vocab_size:", vocab_size)
-        self.logger.info("vocab_size:{}".format(vocab_size))
+        print("vocab_size:{}".format(vocab_size))
 
         tone_size = None
         if self.tones_dict:
@@ -394,7 +394,7 @@ class TTSExecutor(object):
                 tone_id = [line.strip().split() for line in f.readlines()]
             tone_size = len(tone_id)
             # print("tone_size:", tone_size)
-            self.logger.info("tone_size:{}".format(tone_size))
+            print("tone_size:{}".format(tone_size))
 
         spk_num = None
         if self.speaker_dict:
@@ -402,7 +402,7 @@ class TTSExecutor(object):
                 spk_id = [line.strip().split() for line in f.readlines()]
             spk_num = len(spk_id)
             # print("spk_num:", spk_num)
-            self.logger.info("spk_num:{}".format(spk_num))
+            print("spk_num:{}".format(spk_num))
 
         # frontend
         if lang == 'zh':
@@ -413,7 +413,7 @@ class TTSExecutor(object):
         elif lang == 'en':
             self.frontend = English(phone_vocab_path=self.phones_dict)
         # print("frontend done!")
-        self.logger.info("frontend done!")
+        print("frontend done!")
 
         # acoustic model
         odim = self.am_config.n_mels
@@ -444,7 +444,7 @@ class TTSExecutor(object):
         self.am_inference = am_inference_class(am_normalizer, am)
         self.am_inference.eval()
         # print("acoustic model done!")
-        self.logger.info("acoustic model done!")
+        print("acoustic model done!")
 
         # vocoder
         # model: {model_name}_{dataset}
@@ -463,7 +463,7 @@ class TTSExecutor(object):
         self.voc_inference = voc_inference_class(voc_normalizer, voc)
         self.voc_inference.eval()
         # print("voc done!")
-        self.logger.info("voc done!")
+        print("voc done!")
 
     def preprocess(self, input: Any, *args, **kwargs):
         """

@@ -1,2 +1,2 @@
-ttkbootstrap
+streamlit
 paddlespeech

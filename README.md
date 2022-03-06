@@ -46,66 +46,33 @@ sh setup.sh gpu
 ## v1.0
 
 ```
-sh generate_audio.sh trans.txt test/
+见 master分支
 ```
 
 ## v2.0
 
+
+```
+见 master分支
+```
+
 #### 优化
 
-- 针对paddlespeech中给出的demo每次调用都需要重新加载一次模型的问题进行优化；
-- 增加了log重定向；
+- 改用streamlit就行界面搭建，优化显示和调用逻辑；
+- 增加历史记录；
 
 #### 使用
 
 - 启动
 
 ```
-python start.py
+streamlit run start.py
 ```
 
-- 操作
 
-第一步:选择并启动模型
-```
-1、选则语种
-2、选择声学模型： fastspeech2_aishell3
-3、选择声码器： pwgan_aishell3
-4、点击启动模型
-
-注意：声学模型和声码器的名称下划线后面表示的是训练模型所使用后的数据集，两者需要保持一致才能得到质量好的合成声音；
-启动模型时，如果模型没有下载，会自动下载模型，需要等待一会儿。模型加载完成后按钮会变灰色，并显示模型加载完成。
-右侧框中为加载模型时的og输出。
-```
-
-第二步：配置输出地址，并输入内容
-```
-5、配置输出地址：可直接输入，也可以点击右侧按钮选择
-6、输入文本：输入一句话
-7、输入文本文件：导入文件地址
-8、点击开始
-
-右侧框图中将输出合成的音频信息。
-```
-
-- 文本文件格式:txt文本
-
-```
-这里是文本的格式。
-可以带标点符号
-一行文字合成一个音频文件。语速可以通过标点微调。
-保存的音频文件名就包括文本内容，且开头会加上行序
-```
-
-#### 待做
-
-- 优化显示，log等；
-- ~~增加GPU调用~~；
-- 增加语速、语气调节功能；
-- 增加voice_clone;
 
 
 #### 参考资料
 
-- [用Python实现带GUI 的exe](https://blog.csdn.net/miffy2017may/article/details/103391855)
+- [streamlit api](https://docs.streamlit.io/library/api-reference#id1)
 - [PaddleSpeech](https://github.com/PaddlePaddle/PaddleSpeech)
