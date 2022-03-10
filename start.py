@@ -56,11 +56,27 @@ class Builder():
         st.header("导语")
         st.text("欢迎使用AI配音工具，本工具给予streamlit搭建。")
         st.text("作者: phecda-xu")
-        st.text("模型能力由[paddlespeech]()提供。")
+        st.markdown("模型能力由[paddlespeech](https://github.com/PaddlePaddle/PaddleSpeech)提供。")
         st.subheader("操作引导")
-        st.text("在'应用'中选择要使用的功能。")
+        st.markdown("先在`应用`中选择要使用的功能。")
+        st.markdown("然后页面右上角选择栏里面有 `说明`，`选我开始`，`历史记录`三个选项。")
+        st.markdown("参照`说明`内容配置左侧的内容。")
+        st.markdown("配置完成后，选择`选我开始`，然后继续按照`说明`的内容操作即可。")
+        st.markdown("所有合成的音频都可以在`历史记录`里面看到。")
+        st.markdown("任务执行过程中不要做其他操作，否则会打断当前任务进程。")
+
+    def tts_leader_doc(self):
         st.subheader("语音合成")
-        st.text("第一步: 选择是否使用GPU")
+        st.markdown("**第一步**: 选择是否使用GPU（GPU默认只使用 device id 为0的设备）")
+        st.markdown("**第二步**: 选择语种，目前支持中文（`zh`）,英文（`en`）,不支持双语混合，可用中文音替换。")
+        st.markdown("**第三步**: 选择声学模型和声码器，比如： `fastspeech2_aishell3` 和 `pwgan_aishell3` 组合。")
+        st.markdown("**注意**:下划线后边的要保持一致比如 `aishell3` 这样合成音频的质量才是好的。")
+        st.markdown("选定后页面右侧会出现加载字样和图标，配置参数变动后都会自动重新加载模型。")
+
+        st.markdown("**第四步**: 选择说话人ID，每个ID对应一个说话风格，大部分是女声。")
+        st.markdown("**第五步**: 语速和音调暂时不可用。")
+        st.markdown("**第六步**: 保存音频的地址，默认为当前代码路劲下的 `output/` 。")
+
 
     def gpu_setting(self):
         col1, col2 = st.sidebar.columns([1, 3])
@@ -75,12 +91,12 @@ class Builder():
                 os.environ["CUDA_VISIBLE_DEVICES"] = ''
 
     def model_setting(self):
-        st.sidebar.header("语种")
+        # st.sidebar.header("语种")
         lang_option = st.sidebar.selectbox(
-            '声学模型',
+            '选择语言',
             ['zh', 'en']
         )
-        st.sidebar.header("配置模型")
+        # st.sidebar.header("配置模型")
         if lang_option == "zh":
             am_option = st.sidebar.selectbox(
                 '声学模型',
@@ -174,7 +190,7 @@ class Builder():
                                     data=buffer,
                                     file_name=os.path.basename(output),
                                     mime="application/octet-stream",
-                                    key=n
+                                    key=json_name[:-5] + str(n)
                                 )
                     with col3:
                         st.write("-" * 60)
@@ -184,7 +200,7 @@ class Builder():
                             # self.make_targz_one_by_one(tarfile_name, )
 
     def process(self, text_list):
-        jsonfile_name = "{}.json".format(datetime.now().strftime('%Y%m%d%Z%H%M%S'))
+        jsonfile_name = "{}.json".format(datetime.now().strftime('%Y_%m_%d%Z_%H_%M_%S'))
 
         p_col1, p_col2, p_col3, p_col4 = st.columns([16, 1, 1, 1])
         with p_col1:
@@ -257,6 +273,7 @@ class Builder():
 
     def __call__(self, *args, **kwargs):
         # 侧边栏应用分页设置
+        st.sidebar.subheader("配置栏")
         app_option = st.sidebar.selectbox(
             '应用',
             ["", "语音合成", "语音克隆"]
@@ -275,10 +292,10 @@ class Builder():
             with col2:
                 area_option = st.selectbox(
                     '',
-                    ['主页', '历史记录']
+                    ['说明', '选我开始', '历史记录']
                 )
             # 主页操作区
-            if area_option == '主页':
+            if area_option == '选我开始':
                 # 取输入文本
                 text_list = self.get_text_input()
                 # 合成
@@ -286,6 +303,8 @@ class Builder():
             # 历史记录区
             elif area_option == "历史记录":
                 self.update_history()
+            else:
+                self.tts_leader_doc()
 
         elif app_option == "语音克隆":
             st.text("模型能力由paddlespeech提供。")
