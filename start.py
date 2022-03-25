@@ -54,7 +54,7 @@ class Builder():
 
     def start_doc(self):
         st.header("导语")
-        st.text("欢迎使用AI配音工具，本工具基于streamlit搭建。")
+        st.text("欢迎使用AI配音工具PaddleDubbing，本工具基于streamlit搭建。")
         st.text("作者: phecda-xu")
         st.markdown("模型能力由[paddlespeech](https://github.com/PaddlePaddle/PaddleSpeech)提供。")
         st.subheader("操作引导")
