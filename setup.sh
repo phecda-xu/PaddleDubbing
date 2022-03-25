@@ -1,7 +1,5 @@
 #! /bin/bash
 
-#! /bin/bash
-
 device=$1
 
 pip install pytest-runner -i https://pypi.tuna.tsinghua.edu.cn/simple

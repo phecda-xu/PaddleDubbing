@@ -129,8 +129,9 @@ class Builder():
     def other_setting(self):
         st.sidebar.header("参数配置")
         self.spk_option = st.sidebar.number_input(label='说话人ID', min_value=0, step=1, format='%d')
-        self.speed_option = st.sidebar.number_input(label='语速', value=1.0, min_value=0.0)
-        self.energy_option = st.sidebar.number_input(label='音调', value=1.0, min_value=0.0)
+        self.speed_option = st.sidebar.number_input(label='语速', value=1.0, min_value=0.7, max_value=2.0)
+        self.energy_option = st.sidebar.number_input(label='音量', value=1.0, min_value=0.3, max_value=3.0, step=0.1)
+        self.pitch_option = st.sidebar.number_input(label='音高', value=1.0, min_value=0.7, max_value=1.3)
 
         output_path = os.path.join(os.getcwd(), 'output')
         self.save_option = st.sidebar.text_input("保存路劲", output_path)
@@ -244,7 +245,11 @@ class Builder():
                             wav_file = self.tts_executor(
                                 text=i,
                                 output=output,
-                                spk_id=self.spk_option
+                                spk_id=self.spk_option,
+                                speed_degree=self.speed_option,
+                                pitch_degree=self.pitch_option,
+                                energy_degree=self.energy_option,
+                                robot=False
                             )
                         with open(os.path.join(self.jsonfile_path, jsonfile_name), 'a') as f:
                             f.write(json.dumps({

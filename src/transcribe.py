@@ -68,6 +68,10 @@ pretrained_models = {
         'speech_stats.npy',
         'phones_dict':
         'phone_id_map.txt',
+        'pitch_stats':
+            'pitch_stats.npy',
+        'energy_stats':
+            'energy_stats.npy',
     },
     "fastspeech2_ljspeech-en": {
         'url':
@@ -82,6 +86,10 @@ pretrained_models = {
         'speech_stats.npy',
         'phones_dict':
         'phone_id_map.txt',
+        'pitch_stats':
+            'pitch_stats.npy',
+        'energy_stats':
+            'energy_stats.npy',
     },
     "fastspeech2_aishell3-zh": {
         'url':
@@ -98,6 +106,10 @@ pretrained_models = {
         'phone_id_map.txt',
         'speaker_dict':
         'speaker_id_map.txt',
+        'pitch_stats':
+            'pitch_stats.npy',
+        'energy_stats':
+            'energy_stats.npy',
     },
     "fastspeech2_vctk-en": {
         'url':
@@ -114,6 +126,10 @@ pretrained_models = {
         'phone_id_map.txt',
         'speaker_dict':
         'speaker_id_map.txt',
+        'pitch_stats':
+            'pitch_stats.npy',
+        'energy_stats':
+            'energy_stats.npy',
     },
     # pwgan
     "pwgan_csmsc-zh": {
@@ -214,7 +230,7 @@ model_alias = {
     "fastspeech2":
     "paddlespeech.t2s.models.fastspeech2:FastSpeech2",
     "fastspeech2_inference":
-    "paddlespeech.t2s.models.fastspeech2:FastSpeech2Inference",
+    "paddlespeech.t2s.models.fastspeech2:StyleFastSpeech2Inference",
     # voc
     "pwgan":
     "paddlespeech.t2s.models.parallel_wavegan:PWGGenerator",
@@ -232,6 +248,10 @@ model_alias = {
     "paddlespeech.t2s.models.hifigan:HiFiGANGenerator",
     "hifigan_inference":
     "paddlespeech.t2s.models.hifigan:HiFiGANInference",
+}
+
+tuning_dic = {
+    "tuning_npy_path": os.path.join(os.getcwd(), 'models/fastspeech2_csmsc-zh/fastspeech2_nosil_baker_ckpt_0.4'),
 }
 
 
@@ -441,7 +461,13 @@ class TTSExecutor(object):
         am_mu = paddle.to_tensor(am_mu)
         am_std = paddle.to_tensor(am_std)
         am_normalizer = ZScore(am_mu, am_std)
-        self.am_inference = am_inference_class(am_normalizer, am)
+        # StyleFastSpeech_inference
+        if am_name == 'fastspeech2':
+            pitch_stats = os.path.join(tuning_dic["tuning_npy_path"], pretrained_models[am_tag]['pitch_stats'])
+            energy_stats = os.path.join(tuning_dic["tuning_npy_path"], pretrained_models[am_tag]['energy_stats'])
+            self.am_inference = am_inference_class(am_normalizer, am, pitch_stats, energy_stats)
+        else:
+            self.am_inference = am_inference_class(am_normalizer, am)
         self.am_inference.eval()
         # print("acoustic model done!")
         print("acoustic model done!")
@@ -480,7 +506,11 @@ class TTSExecutor(object):
               text: str,
               lang: str='zh',
               am: str='fastspeech2_csmsc',
-              spk_id: int=0):
+              spk_id: int=0,
+              speed_degree: float = 1,
+              pitch_degree: float = 1,
+              energy_degree: float = 1,
+              robot: bool = False):
         """
         Model inference and result stored in self.output.
         """
@@ -516,11 +546,27 @@ class TTSExecutor(object):
             # fastspeech2
             else:
                 # multi speaker
-                if am_dataset in {"aishell3", "vctk"}:
-                    mel = self.am_inference(
-                        part_phone_ids, spk_id=paddle.to_tensor(spk_id))
-                else:
-                    mel = self.am_inference(part_phone_ids)
+                durations = None
+                durations_scale = 1 / speed_degree
+                durations_bias = None
+                pitch = None
+                pitch_scale = pitch_degree
+                pitch_bias = None
+                energy = None
+                energy_scale = energy_degree
+                energy_bias = None
+                mel = self.am_inference(part_phone_ids,
+                                        spk_id=paddle.to_tensor(spk_id),
+                                        durations=durations,
+                                        durations_scale=durations_scale,
+                                        durations_bias=durations_bias,
+                                        pitch=pitch,
+                                        pitch_scale=pitch_scale,
+                                        pitch_bias=pitch_bias,
+                                        energy=energy,
+                                        energy_scale=energy_scale,
+                                        energy_bias=energy_bias,
+                                        robot=robot)
             # voc
             wav = self.voc_inference(mel)
             if flags == 0:
@@ -547,11 +593,22 @@ class TTSExecutor(object):
     def __call__(self,
                  text: str,
                  spk_id: int = 0,
-                 output: str = 'output.wav'
+                 output: str = 'output.wav',
+                 speed_degree: float = 1.0,
+                 pitch_degree: float = 1.0,
+                 energy_degree: float = 1.0,
+                 robot: bool = False
                  ):
         """
         Python API to call an executor.
         """
-        self.infer(text=text, lang=self.lang, am=self.am, spk_id=spk_id)
+        self.infer(text=text,
+                   lang=self.lang,
+                   am=self.am,
+                   spk_id=spk_id,
+                   speed_degree=speed_degree,
+                   pitch_degree=pitch_degree,
+                   energy_degree=energy_degree,
+                   robot=robot)
         res = self.postprocess(output=output)
         return res
