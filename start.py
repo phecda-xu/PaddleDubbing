@@ -281,7 +281,7 @@ class Builder():
         st.sidebar.subheader("配置栏")
         app_option = st.sidebar.selectbox(
             '应用',
-            ["", "语音合成", "语音克隆"]
+            ["导语", "语音合成", "语音克隆"]
         )
         if app_option == "语音合成":
             # 侧边栏GPU相关显示设置
