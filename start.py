@@ -84,10 +84,10 @@ class Builder():
             gpu_option = st.checkbox('GPU')
         with col2:
             if gpu_option:
-                st.markdown("<font size=3.5>(use gpu device 0)</font>", unsafe_allow_html=True)
+                st.markdown("<font size=3.5>(当前使用 gpu:0)</font>", unsafe_allow_html=True)
                 os.environ["CUDA_VISIBLE_DEVICES"] = '0'
             else:
-                st.markdown("<font size=3.5>(use cpu)</font> ", unsafe_allow_html=True)
+                st.markdown("<font size=3.5>(当前使用 cpu)</font> ", unsafe_allow_html=True)
                 os.environ["CUDA_VISIBLE_DEVICES"] = ''
 
     def model_setting(self):
@@ -128,10 +128,14 @@ class Builder():
 
     def other_setting(self):
         st.sidebar.header("参数配置")
-        self.spk_option = st.sidebar.number_input(label='说话人ID', min_value=0, step=1, format='%d')
-        self.speed_option = st.sidebar.number_input(label='语速', value=1.0, min_value=0.7, max_value=2.0)
-        self.energy_option = st.sidebar.number_input(label='音量', value=1.0, min_value=0.3, max_value=3.0, step=0.1)
-        self.pitch_option = st.sidebar.number_input(label='音高', value=1.0, min_value=0.7, max_value=1.3)
+
+        self.spk_option = st.sidebar.number_input(label='说话人ID', min_value=0, max_value=50, step=1, format='%d')
+        self.speed_option = st.sidebar.slider(label='语速', value=1.0, min_value=0.7, max_value=2.0, step=0.1)
+        col1, col2 = st.sidebar.columns([2, 2])
+        with col1:
+            self.energy_option = st.slider(label='音量', value=1.0, min_value=0.3, max_value=3.0, step=0.1)
+        with col2:
+            self.pitch_option = st.slider(label='音高', value=1.0, min_value=0.7, max_value=1.3, step=0.1)
 
         output_path = os.path.join(os.getcwd(), 'output')
         self.save_option = st.sidebar.text_input("保存路劲", output_path)
