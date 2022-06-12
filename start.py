@@ -124,7 +124,7 @@ class Builder():
         # 自动加载模型
         if am_option != '' and voc_option != '':
             with st.spinner("模型加载中..."):
-                self.tts_executor = load_model(am_option, voc_option, lang_option)
+                self.tts_executor = load_model(am=am_option, voc=voc_option, lang=lang_option)
 
     def other_setting(self):
         st.sidebar.header("参数配置")
