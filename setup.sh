@@ -11,3 +11,10 @@ else
 fi
 
 pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+cd
+
+if [ ! -d "nltk_data/" ]; then
+  wget https://paddlespeech.bj.bcebos.com/Parakeet/tools/nltk_data.tar.gz
+  tar -xzvf nltk_data.tar.gz
+fi
