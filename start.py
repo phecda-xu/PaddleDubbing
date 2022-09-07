@@ -1,19 +1,24 @@
 import os
+
+import numpy as np
+
 os.environ['PPSPEECH_HOME'] = os.getcwd()
 
 import json
 import tarfile
 import paddle
+import soundfile as sf
 import streamlit as st
 from datetime import datetime
-from src.transcribe import TTSExecutor
-
+from src.utils import genHeadInfo
+from src.transcribe import TTSExecutor, pretrained_models, front_models
 
 @st.cache(allow_output_mutation=True)
 def load_model(am='fastspeech2_aishell3',
                am_config=None,
                am_ckpt=None,
                am_stat=None,
+               am_tag="1.0",
                phones_dict=None,
                tones_dict=None,
                speaker_dict=None,
@@ -21,13 +26,15 @@ def load_model(am='fastspeech2_aishell3',
                voc_config=None,
                voc_ckpt=None,
                voc_stat=None,
+               voc_tag="1.0",
                lang='zh',
+               front='pinyin',
                device=paddle.get_device()):
-    tts_executor = TTSExecutor(logger=None,
-                               am=am,
+    tts_executor = TTSExecutor(am=am,
                                am_config=am_config,
                                am_ckpt=am_ckpt,
                                am_stat=am_stat,
+                               am_tag=am_tag,
                                phones_dict=phones_dict,
                                tones_dict=tones_dict,
                                speaker_dict=speaker_dict,
@@ -35,7 +42,9 @@ def load_model(am='fastspeech2_aishell3',
                                voc_config=voc_config,
                                voc_ckpt=voc_ckpt,
                                voc_stat=voc_stat,
+                               voc_tag=voc_tag,
                                lang=lang,
+                               front=front,
                                device=device)
     return tts_executor
 
@@ -77,6 +86,61 @@ class Builder():
         st.markdown("**第五步**: 已支持语速、音高和音量调节。")
         st.markdown("**第六步**: 保存音频的地址，默认为当前代码路劲下的 `output/` 。")
 
+        st.subheader("模型列表")
+        # 声学模型
+        ac_tag = ["speedyspeech","fastspeech","tacotron"]
+        # 声码器
+        voc_tag = ["gan","wavernn"]
+        st.markdown("#### **声学模型:**")
+
+        for key, value in list(pretrained_models.items()):
+            if ac_tag[0] in key or ac_tag[1] in key or ac_tag[2] in key:
+                cols1, cols2 = st.columns([2,2])
+                with cols1:
+                    st.markdown(f"**model_name:** {key}")
+                with cols2:
+                    tag_list = list(value.keys())
+                    a = [f"[{i}]({value[i]['url']})" for i in tag_list]
+                    st.markdown(f"**tag:**  {a}")
+        st.markdown("#### **声码器:**")
+        for key, value in list(pretrained_models.items()):
+            if voc_tag[0] in key or voc_tag[1] in key:
+                cols1, cols2 = st.columns([2, 2])
+                with cols1:
+                    st.markdown(f"**model_name:** {key}")
+                with cols2:
+                    tag_list = list(value.keys())
+                    a = [f"[{i}]({value[i]['url']})" for i in tag_list]
+                    st.markdown(f"**tag:**  {a}")
+        st.markdown("#### **Frontend model:**")
+        for key, value in list(front_models.items()):
+            cols1, cols2 = st.columns([2, 2])
+            with cols1:
+                st.markdown(f"**model_name:** {key}")
+            with cols2:
+                tag_list = list(value.keys())
+                a = [f"[{i}]({value[i]['url']})" for i in tag_list]
+                st.markdown(f"**tag:**  {a}")
+
+        st.markdown("```\n"
+                    "模型文件结构：\n"
+                    f"├──models \n"
+                    f"│  ├──fastspeech2_aishell3-zh \n"
+                    f"│  │  ├──fastspeech2_nosil_aishell3_ckpt_0.4 \n"
+                    f"│  │  │  ├──default.yaml \n"
+                    f"│  │  │  ├──... \n"
+                    f"│  │  │  └──speech_stats.npy \n"
+                    f"│  │  └──fastspeech2_nosil_aishell3_ckpt_0.4.zip \n"
+                    f"│  ├──pwgan_aishell3-zh \n"
+                    f"│  │  ├──pwg_aishell3_ckpt_0.5 \n"
+                    f"│  │  │  ├──default.yaml \n"
+                    f"│  │  │  ├──... \n"
+                    f"│  │  │  └──speech_stats.npy \n"
+                    f"│  │  └──pwg_aishell3_ckpt_0.5.zip \n"
+                    f"... \n"
+                    "```")
+
+        st.markdown("**注**：点击tag 可以下载对应的模型！")
 
     def gpu_setting(self):
         col1, col2 = st.sidebar.columns([1, 3])
@@ -91,45 +155,133 @@ class Builder():
                 os.environ["CUDA_VISIBLE_DEVICES"] = ''
 
     def model_setting(self):
+        self.am_list = []
+        self.voc_list = []
+        ac_tag = ["speedyspeech", "fastspeech", "tacotron"]
+        voc_tag = ["gan", "wavernn"]
+        for key, value in list(pretrained_models.items()):
+            if ac_tag[0] in key or ac_tag[1] in key or ac_tag[2] in key:
+                self.am_list.append(key)
+        for key, value in list(pretrained_models.items()):
+            if voc_tag[0] in key or voc_tag[1] in key:
+                self.voc_list.append(key)
+
+        for new_model_name in os.listdir(os.path.join(os.environ['PPSPEECH_HOME'], "models")):
+            if "fintune" in new_model_name:
+                file_path = os.path.join(os.environ['PPSPEECH_HOME'], "models", new_model_name)
+                for folder_name in os.listdir(file_path):
+                    if not folder_name.endswith(".zip"):
+                        for i in os.listdir(os.path.join(file_path, folder_name)):
+                            if i.endswith('pdz'):
+                                ckpt_name = i
+                                if ac_tag[0] in new_model_name or ac_tag[1] in new_model_name or ac_tag[2] in new_model_name:
+                                    pretrained_models[new_model_name] = {
+                                        "1.0": {
+                                            'url':
+                                            f'models/{new_model_name}/{folder_name}.zip',
+                                            'md5':
+                                            '0',
+                                            'config':
+                                                'default.yaml',
+                                            'ckpt':
+                                                ckpt_name,
+                                            'speech_stats':
+                                                'speech_stats.npy',
+                                            'phones_dict':
+                                                'phone_id_map.txt',
+                                            'speaker_dict':
+                                                'speaker_id_map.txt',
+                                        }
+                                    }
+                                if voc_tag[0] in new_model_name or voc_tag[1] in new_model_name:
+                                    pretrained_models[new_model_name] = {
+                                        "1.0": {
+                                            'url':
+                                                f'models/{new_model_name}/{folder_name}.zip',
+                                            'md5':
+                                                '0',
+                                            'config':
+                                                'default.yaml',
+                                            'ckpt':
+                                                ckpt_name,
+                                            'speech_stats':
+                                                'feats_stats.npy',
+                                        }
+                                    }
+
         # st.sidebar.header("语种")
         lang_option = st.sidebar.selectbox(
             '选择语言',
-            ['zh', 'en']
+            ['zh', 'en', 'mix']
         )
+        am_zh_model_list = ['']
+        am_en_model_list = ['']
+        am_mix_model_list = ['']
+        for i in self.am_list:
+            if "zh" in i:
+                am_zh_model_list.append(i.replace("-zh", ""))
+            if "en" in i:
+                am_en_model_list.append(i.replace("-en", ""))
+            if "mix" in i:
+                am_mix_model_list.append(i.replace("-mix", ""))
+
+        voc_zh_model_list = ['']
+        voc_en_model_list = ['']
+        voc_mix_model_list = ['']
+        for i in self.voc_list:
+            if "zh" in i:
+                voc_zh_model_list.append(i.replace("-zh", ""))
+            if "en" in i:
+                voc_en_model_list.append(i.replace("-en", ""))
+            if "mix" in i:
+                voc_mix_model_list.append(i.replace("-mix", ""))
         # st.sidebar.header("配置模型")
         if lang_option == "zh":
-            am_option = st.sidebar.selectbox(
-                '声学模型',
-                ['', 'speedyspeech_csmsc', 'fastspeech2_csmsc', 'fastspeech2_aishell3']
-            )
-
-            voc_option = st.sidebar.selectbox(
-                '声码器',
-                ['', 'pwgan_csmsc', 'pwgan_aishell3', 'mb_melgan_csmsc',
-                 'style_melgan_csmsc', 'hifigan_csmsc']
-            )
+            am_option = st.sidebar.selectbox('声学模型',am_zh_model_list, key="am_zh_option")
+            if am_option != "":
+                am_tag_list = list(pretrained_models[am_option + '-zh'].keys())
+                am_tag_option = st.sidebar.selectbox('tag', am_tag_list, key="am_zh_tag_option")
+            voc_option = st.sidebar.selectbox('声码器', voc_zh_model_list, key="voc_zh_option")
+            if voc_option != "":
+                voc_tag_list = list(pretrained_models[voc_option + '-zh'].keys())
+                voc_tag_option = st.sidebar.selectbox('tag', voc_tag_list, key="voc_zh_tag_option")
         elif lang_option == "en":
-            am_option = st.sidebar.selectbox(
-                '声学模型',
-                ['', 'fastspeech2_ljspeech', 'fastspeech2_vctk']
-            )
-
-            voc_option = st.sidebar.selectbox(
-                '声码器',
-                ['', 'pwgan_ljspeech', 'pwgan_vctk']
-            )
+            am_option = st.sidebar.selectbox('声学模型', am_en_model_list, key="am_en_option")
+            if am_option != "":
+                am_tag_list = list(pretrained_models[am_option + '-en'].keys())
+                am_tag_option = st.sidebar.selectbox('tag', am_tag_list, key="am_en_tag_option")
+            voc_option = st.sidebar.selectbox('声码器', voc_en_model_list, key="voc_en_option")
+            if voc_option != "":
+                voc_tag_list = list(pretrained_models[voc_option + '-en'].keys())
+                voc_tag_option = st.sidebar.selectbox('tag', voc_tag_list, key="voc_en_tag_option")
+        elif lang_option == "mix":
+            am_option = st.sidebar.selectbox('声学模型', am_mix_model_list, key="am_mix_option")
+            if am_option != "":
+                am_tag_list = list(pretrained_models[am_option + '-mix'].keys())
+                am_tag_option = st.sidebar.selectbox('tag', am_tag_list, key="am_mix_tag_option")
+            voc_option = st.sidebar.selectbox('声码器', voc_zh_model_list, key="voc_mix_option")
+            if voc_option != "":
+                voc_tag_list = list(pretrained_models[voc_option + '-zh'].keys())
+                voc_tag_option = st.sidebar.selectbox('tag', voc_tag_list, key="voc_mix_tag_option")
         else:
             raise ValueError("")
+
+        frontend_option = st.sidebar.selectbox("frontend选择", ["g2pM", "g2pW"])
 
         # 自动加载模型
         if am_option != '' and voc_option != '':
             with st.spinner("模型加载中..."):
-                self.tts_executor = load_model(am=am_option, voc=voc_option, lang=lang_option)
+                print(am_option, voc_option, lang_option)
+                self.tts_executor = load_model(am=am_option,
+                                               am_tag=am_tag_option,
+                                               voc=voc_option,
+                                               voc_tag=voc_tag_option,
+                                               lang=lang_option,
+                                               front=frontend_option)
 
     def other_setting(self):
         st.sidebar.header("参数配置")
-
-        self.spk_option = st.sidebar.number_input(label='说话人ID', min_value=0, max_value=50, step=1, format='%d')
+        self.spk_option = st.sidebar.number_input(label='说话人ID', min_value=0, max_value=200, step=1, format='%d')
         self.speed_option = st.sidebar.slider(label='语速', value=1.0, min_value=0.7, max_value=2.0, step=0.1)
         col1, col2 = st.sidebar.columns([2, 2])
         with col1:
@@ -160,6 +312,17 @@ class Builder():
             data = f.read()
         return data
 
+    @staticmethod
+    def get_batch_wav_data(bin_file_list, file_label='File'):
+        data = b''
+        for bin_file in bin_file_list:
+            # signal, samplerate = sf.read(bin_file)
+            with open(bin_file, 'rb') as f:
+                bin_data = f.read()
+                data += bin_data
+                print(bin_data[:48])
+        return data
+
     def make_targz_one_by_one(self, output_filename, pathfile):
         tar = tarfile.open(output_filename, "w:gz")
         tar.add(pathfile)
@@ -175,32 +338,58 @@ class Builder():
                     col2.subheader("音频")
                     col3.subheader("下载")
                     n = 0
-                    with st.spinner("加载中..."):
-                        for i in f.readlines():
-                            json_dict = json.loads(i)
-                            col1, col2, col3 = st.columns([3, 3, 1])
-                            n += 1
-                            with col1:
-                                st.write("-" * 60)
-                                st.write("句 {} : {} ".format(n, json_dict["text"]))
-                                output = json_dict["audio_path"]
-                            buffer = self.get_wav_data(output)
-                            with col2:
-                                st.write("-" * 60)
-                                st.audio(buffer, format='audio/wav')
-                            with col3:
-                                st.write("-" * 60)
-                                st.download_button(
-                                    label="Download",
-                                    data=buffer,
-                                    file_name=os.path.basename(output),
-                                    mime="application/octet-stream",
-                                    key=json_name[:-5] + str(n)
-                                )
-                    with col3:
+                    array_list = []
+                    array_list.append(np.zeros(300))
+                    # with st.spinner("加载中..."):
+                    for i in f.readlines():
+                        json_dict = json.loads(i)
+                        col1_1, col2_1, col3_1 = st.columns([3, 3, 1])
+                        n += 1
+                        with col1_1:
+                            st.write("-" * 60)
+                            st.write("句 {} : {} ".format(n, json_dict["text"]))
+                            output = json_dict["audio_path"]
+                        buffer = self.get_wav_data(output)
+                        signal, sr = sf.read(output)
+                        array_list.append(signal)
+                        array_list.append(np.zeros(1000))
+                        with col2_1:
+                            st.write("-" * 60)
+                            st.audio(buffer, format='audio/wav')
+                        with col3_1:
+                            st.write("-" * 60)
+                            st.download_button(
+                                label="Download",
+                                data=buffer,
+                                file_name=os.path.basename(output),
+                                mime="application/octet-stream",
+                                key=json_name[:-5] + '_' + str(n)
+                            )
+                    batch_array = np.concatenate(array_list)
+                    bath_wav_filepath = '{}/{}/{}.wav'.format(self.save_option, json_name[:-5], json_name[:-5])
+                    sf.write(bath_wav_filepath, batch_array, sr)
+
+                    with col1:
                         st.write("-" * 60)
-                        # if st.button("打包下载"):
-                        #     st.empty()
+
+                    batch_buffer = self.get_wav_data(bath_wav_filepath)
+                    wav_header = genHeadInfo(24000, 16, len(batch_buffer), 1)
+                    print(wav_header)
+                    batch_buffer = wav_header + batch_buffer
+                    with col2:
+                        st.write("-" * 60)
+                        st.download_button(
+                            label="合并下载",
+                            data=batch_buffer,
+                            file_name='{}.wav'.format(json_name[:-5]),
+                            mime="application/octet-stream",
+                            key=json_name[:-5] + '_batch'
+                        )
+
+                    # with col3:
+                    #     st.write("-" * 60)
+                    #     if st.button("打包下载"):
+                    #         st.empty()
                         #     tarfile_name = json_name[:-5] + 'tar'
                             # self.make_targz_one_by_one(tarfile_name, )
 
@@ -231,9 +420,10 @@ class Builder():
                 n = 0
                 break_state = 0
                 for i in text_list:
+                    text_i = i.strip('\r')
                     col1, col2, col3 = st.columns([3, 3, 1])
                     n += 1
-                    if i == '':
+                    if text_i == '':
                         st.error("请输入要合成的文本内容！！")
                         break_state = 2
                         break
@@ -242,12 +432,15 @@ class Builder():
                         break
                     with col1:
                         st.write("-" * 60)
-                        st.write("句 {} : {} ".format(n, i))
-                        outfile_name = '{}_spk_{}_{}.wav'.format(n, self.spk_option, i)
-                        output = os.path.join(self.save_option, outfile_name)
+                        st.write("句 {} : {} ".format(n, text_i))
+                        outfile_name = '{}_spk_{}_{}.wav'.format(n, self.spk_option, text_i)
+                        output_path = os.path.join(self.save_option, jsonfile_name[:-5])
+                        if not os.path.exists(output_path):
+                            os.makedirs(output_path)
+                        output = os.path.join(output_path, outfile_name)
                         with st.spinner("合成中..."):
                             wav_file = self.tts_executor(
-                                text=i,
+                                text=text_i,
                                 output=output,
                                 spk_id=self.spk_option,
                                 speed_degree=self.speed_option,
@@ -257,7 +450,7 @@ class Builder():
                             )
                         with open(os.path.join(self.jsonfile_path, jsonfile_name), 'a') as f:
                             f.write(json.dumps({
-                                "text": i,
+                                "text": text_i,
                                 "audio_path": output
                             }) + '\n')
 

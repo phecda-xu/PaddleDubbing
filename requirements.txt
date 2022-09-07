@@ -1,2 +1,2 @@
-streamlit
-paddlespeech
+streamlit==1.12.0
+paddlespeech==1.1.3
