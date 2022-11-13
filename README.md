@@ -5,8 +5,11 @@
 基于 streamlit 搭建的可视化界面，模型能力来自 [paddlespeech](https://github.com/PaddlePaddle/PaddleSpeech)；
 可以灵活配置、调用模型；可以单句合成也可以批量合成。支持中文和英文，不支持中英混合。
 
-- 界面
-![](pic/gui.png)
+- 合成界面
+![](pic/gui_1.png)
+
+- 数据处理界面
+![](pic/gui_2.png)
 
 - 视频vlog
 
@@ -59,8 +62,11 @@ sh setup.sh gpu
 
 #### 优化
 
-- 改用 streamlit 就行界面搭建，优化显示和调用逻辑；
-- 增加历史记录；
+- 优化了本地fintune模型的加载;
+- 优化了部分代码逻辑;
+- 新增数据切分、标注处理页面，可直接生成 fintune 所需的数据形式;
+- 优化部分页面显示;
+- 增加部分说明信息;
 
 #### 使用
 
@@ -72,11 +78,8 @@ streamlit run start.py
 
 #### 待做
 
-- 增加打包下载功能;
 - v3.0 视频 vlog;
-- ~~增加语速、声调等设置~~;
-- 增加远程功能;
-
+- Dockerfile
 
 #### 参考资料
 
