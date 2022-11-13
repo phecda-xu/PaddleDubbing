@@ -257,9 +257,9 @@ model_alias = {
     "paddlespeech.t2s.models.hifigan:HiFiGANInference",
 }
 
-tuning_dic = {
-    "tuning_npy_path": os.path.join(os.getcwd(), 'models/fastspeech2_csmsc-zh/fastspeech2_nosil_baker_ckpt_0.4'),
-}
+# tuning_dic = {
+#     "tuning_npy_path": os.path.join(os.getcwd(), 'models/fastspeech2_csmsc-zh/fastspeech2_nosil_baker_ckpt_0.4'),
+# }
 
 
 class TTSExecutor(object):

@@ -34,6 +34,7 @@ def decompress(archive: Dict[str, str], path: str) -> os.PathLike:
     Download archieves and decompress to specific path.
     """
     if not os.path.isdir(path):
+       print(f"mkdir : {path}")
        os.makedirs(path)
 
     assert 'url' in archive and 'md5' in archive, \
