@@ -18,7 +18,7 @@ import soundfile as sf
 import streamlit as st
 
 from tkinter import filedialog
-from src.asr import ASRExecutor
+from tool.src.asr import ASRExecutor
 from tool.audio import Audio
 from tool.audio import genHeadInfo
 from pypinyin import lazy_pinyin, Style
@@ -60,7 +60,7 @@ def get_md5(content):
 
 
 def collect_log_files():
-    base_log_save_path = f"{args.base_path}/log/"
+    base_log_save_path = f"{args.base_path}/history/audio_process_log/"
     tagging_list = []
     for root, _, files in os.walk(base_log_save_path):
         if root == base_log_save_path:

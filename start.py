@@ -10,8 +10,7 @@ import paddle
 import soundfile as sf
 import streamlit as st
 from datetime import datetime
-from src.utils import genHeadInfo
-from src.tts import TTSExecutor, pretrained_models, front_models
+from tool.src.tts import TTSExecutor, pretrained_models, front_models
 
 @st.cache(allow_output_mutation=True)
 def load_model(am='fastspeech2_aishell3',
@@ -57,7 +56,7 @@ class Builder():
                 layout="wide",
                 initial_sidebar_state="auto",
             )
-        self.jsonfile_path = os.path.join(os.getcwd(), "history")
+        self.jsonfile_path = os.path.join(os.getcwd(), "history/dubbing_log")
         if not os.path.exists(self.jsonfile_path):
             os.makedirs(self.jsonfile_path)
 
@@ -343,23 +342,24 @@ class Builder():
     def update_history(self):
         for json_file in os.listdir(self.jsonfile_path):
             json_name = os.path.basename(json_file)
+            # print(json_name)
             with st.expander(json_name[:-5], expanded=False):
-                with open(os.path.join(self.jsonfile_path, json_file), 'r') as f:
+                with open(os.path.join(self.jsonfile_path, json_file)) as f:
+                    json_dicts = json.load(f)
                     col1, col2, col3 = st.columns([3, 3, 1])
                     col1.subheader("文本")
                     col2.subheader("音频")
                     col3.subheader("下载")
-                    n = 0
+
                     array_list = []
                     array_list.append(np.zeros(300))
                     # with st.spinner("加载中..."):
-                    for i in f.readlines():
-                        json_dict = json.loads(i)
+                    for key, value in json_dicts.items():
+                        json_dict = value
                         col1_1, col2_1, col3_1 = st.columns([3, 3, 1])
-                        n += 1
                         with col1_1:
                             st.write("-" * 60)
-                            st.write("句 {} : {} ".format(n, json_dict["text"]))
+                            st.write("句 {} : {} ".format(key, json_dict["text"]))
                             output = json_dict["audio_path"]
                         buffer = self.get_wav_data(output)
                         signal, sr = sf.read(output)
@@ -375,35 +375,12 @@ class Builder():
                                 data=buffer,
                                 file_name=os.path.basename(output),
                                 mime="application/octet-stream",
-                                key=json_name[:-5] + '_' + str(n)
+                                key=json_name[:-5] + '_' + str(key)
                             )
                     batch_array = np.concatenate(array_list)
                     bath_wav_filepath = '{}/{}/{}.wav'.format(self.save_option, json_name[:-5], json_name[:-5])
                     sf.write(bath_wav_filepath, batch_array, sr)
 
-                    # with col1:
-                    #     st.write("-" * 60)
-                    #
-                    # batch_buffer = self.get_wav_data(bath_wav_filepath)
-                    # wav_header = genHeadInfo(24000, 16, len(batch_buffer), 1)
-                    # print(wav_header)
-                    # batch_buffer = wav_header + batch_buffer
-                    # with col2:
-                    #     st.write("-" * 60)
-                    #     st.download_button(
-                    #         label="合并下载",
-                    #         data=batch_buffer,
-                    #         file_name='{}.wav'.format(json_name[:-5]),
-                    #         mime="application/octet-stream",
-                    #         key=json_name[:-5] + '_batch'
-                    #     )
-
-                    # with col3:
-                    #     st.write("-" * 60)
-                    #     if st.button("打包下载"):
-                    #         st.empty()
-                    #         tarfile_name = json_name[:-5] + 'tar'
-                    #         self.make_targz_one_by_one(tarfile_name, )
 
     def process(self, text_list):
         jsonfile_name = "{}.json".format(datetime.now().strftime('%Y_%m_%d%Z_%H_%M_%S'))

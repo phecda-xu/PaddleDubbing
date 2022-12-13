@@ -34,7 +34,7 @@ from paddlespeech.t2s.frontend.mix_frontend import MixFrontend
 from paddlespeech.t2s.modules.normalizer import ZScore
 from .utils import decompress
 from paddlespeech.resource.pretrained_models import tts_dynamic_pretrained_models, tts_static_pretrained_models, g2pw_onnx_models
-from paddlespeech.t2s.exps.syn_utils import model_alias
+# from paddlespeech.t2s.exps.syn_utils import model_alias
 
 __all__ = ['TTSExecutor']
 
@@ -229,42 +229,42 @@ pretrained_models = tts_dynamic_pretrained_models
 front_models = g2pw_onnx_models
 
 
-# model_alias = {
-#     # acoustic model
-#     "speedyspeech":
-#     "paddlespeech.t2s.models.speedyspeech:SpeedySpeech",
-#     "speedyspeech_inference":
-#     "paddlespeech.t2s.models.speedyspeech:SpeedySpeechInference",
-#     "fastspeech2":
-#     "paddlespeech.t2s.models.fastspeech2:FastSpeech2",
-#     "fastspeech2_inference":
-#     "paddlespeech.t2s.models.fastspeech2:StyleFastSpeech2Inference",
-#     "tacotron2":
-#     "paddlespeech.t2s.models.tacotron2:Tacotron2",
-#     "tacotron2_inference":
-#     "paddlespeech.t2s.models.tacotron2:Tacotron2Inference",
-#     # voc
-#     "pwgan":
-#     "paddlespeech.t2s.models.parallel_wavegan:PWGGenerator",
-#     "pwgan_inference":
-#     "paddlespeech.t2s.models.parallel_wavegan:PWGInference",
-#     "mb_melgan":
-#     "paddlespeech.t2s.models.melgan:MelGANGenerator",
-#     "mb_melgan_inference":
-#     "paddlespeech.t2s.models.melgan:MelGANInference",
-#     "style_melgan":
-#     "paddlespeech.t2s.models.melgan:StyleMelGANGenerator",
-#     "style_melgan_inference":
-#     "paddlespeech.t2s.models.melgan:StyleMelGANInference",
-#     "hifigan":
-#     "paddlespeech.t2s.models.hifigan:HiFiGANGenerator",
-#     "hifigan_inference":
-#     "paddlespeech.t2s.models.hifigan:HiFiGANInference",
-#     "wavernn":
-#     "paddlespeech.t2s.models.wavernn:WaveRNN",
-#     "wavernn_inference":
-#     "paddlespeech.t2s.models.wavernn:WaveRNNInference",
-# }
+model_alias = {
+    # acoustic model
+    "speedyspeech":
+    "paddlespeech.t2s.models.speedyspeech:SpeedySpeech",
+    "speedyspeech_inference":
+    "paddlespeech.t2s.models.speedyspeech:SpeedySpeechInference",
+    "fastspeech2":
+    "paddlespeech.t2s.models.fastspeech2:FastSpeech2",
+    "fastspeech2_inference":
+    "paddlespeech.t2s.models.fastspeech2:StyleFastSpeech2Inference",
+    "tacotron2":
+    "paddlespeech.t2s.models.tacotron2:Tacotron2",
+    "tacotron2_inference":
+    "paddlespeech.t2s.models.tacotron2:Tacotron2Inference",
+    # voc
+    "pwgan":
+    "paddlespeech.t2s.models.parallel_wavegan:PWGGenerator",
+    "pwgan_inference":
+    "paddlespeech.t2s.models.parallel_wavegan:PWGInference",
+    "mb_melgan":
+    "paddlespeech.t2s.models.melgan:MelGANGenerator",
+    "mb_melgan_inference":
+    "paddlespeech.t2s.models.melgan:MelGANInference",
+    "style_melgan":
+    "paddlespeech.t2s.models.melgan:StyleMelGANGenerator",
+    "style_melgan_inference":
+    "paddlespeech.t2s.models.melgan:StyleMelGANInference",
+    "hifigan":
+    "paddlespeech.t2s.models.hifigan:HiFiGANGenerator",
+    "hifigan_inference":
+    "paddlespeech.t2s.models.hifigan:HiFiGANInference",
+    "wavernn":
+    "paddlespeech.t2s.models.wavernn:WaveRNN",
+    "wavernn_inference":
+    "paddlespeech.t2s.models.wavernn:WaveRNNInference",
+}
 
 # tuning_dic = {
 #     "tuning_npy_path": os.path.join(os.getcwd(), 'models/fastspeech2_csmsc-zh/fastspeech2_nosil_baker_ckpt_0.4'),
