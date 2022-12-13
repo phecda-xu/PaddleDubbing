@@ -78,6 +78,15 @@ def print_state():
         st.write(st.session_state)
 
 
+def config_page():
+    st.set_page_config(
+        page_title="数据标注工具",
+        page_icon=":shark",
+        layout="wide",
+        initial_sidebar_state="auto",
+    )
+
+
 class Builder(object):
     def __init__(self, args):
         self.args = args
@@ -89,6 +98,17 @@ class Builder(object):
         st.text("欢迎使用音频处理工具，本工具基于streamlit搭建。")
         st.text("作者: phecda-xu")
         st.markdown("使用中每次修改请按 `enter` 键进行确认!")
+        st.subheader("工具实现基本思路")
+        st.markdown("这里描述的是为满足具体需求而构思的工具执行思路")
+        st.markdown("- 思路一")
+        st.markdown(" 1、**多通道音频 -> 单通道** ")
+        st.markdown(" 2、**VAD -> 片段** ")
+        st.markdown(" 3、**SE  -> 去掉背景音** ")
+        st.markdown(" 4、**标注  -> 文本及拼音** ")
+        st.markdown(" 5、**生成标注格式数据集** ")
+        st.markdown("- 思路二")
+        st.markdown(" 1、**合成声音 -> SE 增强** ")
+
 
     @staticmethod
     def get_wav_data(bin_file, file_label='File'):
@@ -172,20 +192,26 @@ class Builder(object):
         return point_list
 
     def assist_module(self):
-        assist_tab1, assist_tab2 = st.sidebar.tabs(["ASR", "VAD"])
+        assist_tab1, assist_tab2 = st.sidebar.tabs(["基础工具", "算法工具"])
 
         with assist_tab1:
-            self.asr_option = st.checkbox('ASR')
-            self.gpu_option = st.checkbox('GPU')
-            if self.asr_option:
-                self.model_setting()
-            if self.gpu_option:
-                self.gpu_setting()
-
-        with assist_tab2:
-            self.vad_option = st.checkbox('VAD')
+            self.gpu_option = st.checkbox('加速(GPU)')
+            self.vad_option = st.checkbox('切分(VAD)')
+            self.convert_option = st.checkbox('格式转换(暂不可用)', disabled=True)
             if self.vad_option:
                 self.audio_processer = Audio(self.sr)
+            if self.gpu_option:
+                self.gpu_setting()
+            if self.convert_option:
+                pass
+
+        with assist_tab2:
+            self.asr_option = st.checkbox('语音识别(ASR)')
+            self.se_option = st.checkbox('语音增强(SE)(暂不可用)', disabled=True)
+            if self.asr_option:
+                self.model_setting()
+            if self.se_option:
+                pass
 
     def audio_setting(self):
         audio_tab1, audio_tab2 = st.sidebar.tabs(["生成通道数", "生成采样率"])
@@ -595,6 +621,7 @@ class Builder(object):
                     self.audio_process_stage_4()
 
     def __call__(self, *args, **kwargs):
+        config_page()
         # top
         st.sidebar.subheader("配置栏")
         app_option = st.sidebar.selectbox(
