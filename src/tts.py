@@ -34,6 +34,7 @@ from paddlespeech.t2s.frontend.mix_frontend import MixFrontend
 from paddlespeech.t2s.modules.normalizer import ZScore
 from .utils import decompress
 from paddlespeech.resource.pretrained_models import tts_dynamic_pretrained_models, tts_static_pretrained_models, g2pw_onnx_models
+# from paddlespeech.t2s.exps.syn_utils import model_alias
 
 __all__ = ['TTSExecutor']
 
@@ -238,6 +239,10 @@ model_alias = {
     "paddlespeech.t2s.models.fastspeech2:FastSpeech2",
     "fastspeech2_inference":
     "paddlespeech.t2s.models.fastspeech2:StyleFastSpeech2Inference",
+    "tacotron2":
+    "paddlespeech.t2s.models.tacotron2:Tacotron2",
+    "tacotron2_inference":
+    "paddlespeech.t2s.models.tacotron2:Tacotron2Inference",
     # voc
     "pwgan":
     "paddlespeech.t2s.models.parallel_wavegan:PWGGenerator",
@@ -475,6 +480,8 @@ class TTSExecutor(object):
                 vocab_size=vocab_size,
                 tone_size=tone_size,
                 **self.am_config["model"])
+        elif am_name == 'tacotron2':
+            am = am_class(idim=vocab_size, odim=odim, **self.am_config["model"])
 
         am.set_state_dict(paddle.load(self.am_ckpt)["main_params"])
         am.eval()
@@ -563,10 +570,17 @@ class TTSExecutor(object):
         flags = 0
         for i in range(len(phone_ids)):
             part_phone_ids = phone_ids[i]
+            print("am_name: ", am_name)
             # am
             if am_name == 'speedyspeech':
                 part_tone_ids = tone_ids[i]
                 mel = self.am_inference(part_phone_ids, part_tone_ids)
+            elif am_name == 'tacotron2':
+                if am_dataset in {"aishell3", "vctk"}:
+                    mel = self.am_inference(
+                        part_phone_ids, spk_id=paddle.to_tensor(spk_id))
+                else:
+                    mel = self.am_inference(part_phone_ids)
             # fastspeech2
             else:
                 # multi speaker
